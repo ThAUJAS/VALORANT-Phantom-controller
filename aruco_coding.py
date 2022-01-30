@@ -50,24 +50,42 @@ def rotationMatrixToEulerAngles(R):
 
 def arduinoMove():
   data = ['']*2
-  arduinomsg = [0]*1
-  arduinosave = [0]*1
+  arduinomsg = [0]*2
+  arduinosave = [0]*2
   #state the port and baudrate of the arudino
-  arduino = serial.Serial(port='COM4', baudrate=4800, timeout=.1)
+  arduino = serial.Serial(port='COM4', baudrate=9600, timeout=.1)
+
+  buttonList = [vg.XUSB_BUTTON.XUSB_GAMEPAD_A,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_START,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_GUIDE,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_A,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_B,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_X,
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_Y]
+
   while True:
-    data = arduino.readline()
-    for i in range(1):     
-      try:
-        arduinomsg[i] = int(data.decode('utf-8').split()[i])
+    data = arduino.readline()   
+    try:                                                                                             
+      dataDecoded = data.decode('utf-8').split()
+      for i in range(2):
+        arduinomsg[i] = int(dataDecoded[i])
         if (arduinomsg[i] == 0 and arduinosave[i] != 0):  
-          gamepad.left_trigger_float(value_float=1.)
-          gamepad.update()                                                 
+          gamepad.press_button(button = buttonList[i])                          
         if (arduinomsg[i] == 1 and arduinosave[i] != 1):
-          gamepad.left_trigger_float(value_float=0.) 
-          gamepad.update()
+          gamepad.release_button(button = buttonList[i]) 
+        gamepad.update()
         arduinosave = arduinomsg.copy()
-      except:
-        pass
+    except:
+      pass
     
     # release buttons and things
     """"gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
