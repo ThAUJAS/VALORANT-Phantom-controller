@@ -6,7 +6,6 @@ from threading import Thread
 import vgamepad as vg
 import serial
 
-
 #create the virtual gamepad
 gamepad = vg.VX360Gamepad()
 
@@ -55,25 +54,24 @@ def arduinoMove():
   #state the port and baudrate of the arudino
   arduino = serial.Serial(port='COM4', baudrate=9600, timeout=.1)
 
-  buttonList = [vg.XUSB_BUTTON.XUSB_GAMEPAD_A,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_START,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_GUIDE,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_A,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_B,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_X,
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_Y]
+  buttonList = [
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP, # forward / z
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN, # backward / s
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT, # left / q
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT, # right / d
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_START, # reload / T
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK, # walk / Lctrl
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER, # shoot / left click
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER, # aim / right click
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB, #  jump / space 
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB, # use / E
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_A, # skill 1 / R
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_B, # skill 2 / A
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_X, # ult / X
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_Y] # skill 3 / F
 
   while True:
-    data = arduino.readline()   
+    data = arduino.readline()
     try:                                                                                             
       dataDecoded = data.decode('utf-8').split()
       for i in range(2):
@@ -86,17 +84,6 @@ def arduinoMove():
         arduinosave = arduinomsg.copy()
     except:
       pass
-    
-    # release buttons and things
-    """"gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
-    gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT)
-    gamepad.right_trigger_float(value_float=0.0)
-    gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
-    gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN)
-    gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT)
-    gamepad.left_trigger_float(value_float=0.5)
-    gamepad.right_trigger_float(value_float=1)
-    gamepad.left_joystick_float(x_value_float=0, y_value_float=0.2)"""
 
 def arucoRead():
   global arucomsg
@@ -119,7 +106,6 @@ def arucoRead():
 
   #--- Define the aruco dictionary
   aruco_dict  = aruco.getPredefinedDictionary(aruco.DICT_ARUCO_ORIGINAL)
-
   cap = cv2.VideoCapture(0)
   cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
   cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -157,7 +143,8 @@ def arucoRead():
 def joystickMove():
   global arucomsg
   while True:
-    gamepad.right_joystick(x_value = int(-arucomsg[2]*32768/90), y_value = int(arucomsg[1]*32768/90))
+    gamepad.left_joystick(x_value = 0, y_value = int(arucomsg[0]*32768/180))
+    gamepad.right_joystick(x_value = int(-arucomsg[2]*32768/45), y_value = int(arucomsg[1]*32768/45))
     gamepad.update()
                                                                                                         
 class thread_with_trace(Thread):
@@ -197,4 +184,4 @@ if __name__ == "__main__":
     thread1 = thread_with_trace(target = joystickMove) # virtual controller
     thread1.start()         
     thread = thread_with_trace(target = arduinoMove) # "       " read the values, process it and send it with Socket
-    thread.start()                                                                                     
+    thread.start()                                                                                 
