@@ -9,11 +9,18 @@ import serial
 #create the virtual gamepad
 gamepad = vg.VX360Gamepad()
 
-arduinomsg = [0]*2
+arduinomsg = [0]*14
+arduinosave = [0]*14
 arucomsg = [0]*3
+angle = [0]*3
 
-def _map(x, in_min, in_max, out_min, out_max):
-    return int((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
+def maxi(val):
+  if abs(val)<2:
+    return 0
+  if abs(val)>16:
+    return -np.sign(val)*20000
+  else:
+    return int(-np.sign(val)*math.sqrt(abs(val))*32768/4)
 
 def expFilter(new, old):
     filtered = [0]*3
@@ -48,34 +55,37 @@ def rotationMatrixToEulerAngles(R):
     return np.array([x, y, z])
 
 def arduinoMove():
+  global arduinomsg
   data = ['']*2
-  arduinomsg = [0]*2
-  arduinosave = [0]*2
+  arduinomsg = [0]*14
+  arduinosave = [0]*14
   #state the port and baudrate of the arudino
   arduino = serial.Serial(port='COM4', baudrate=9600, timeout=.1)
 
   buttonList = [
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP, # forward / z
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN, # backward / s
     vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT, # left / q
     vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT, # right / d
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN, # backward / s
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP, # forward / z
     vg.XUSB_BUTTON.XUSB_GAMEPAD_START, # reload / T
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK, # walk / Lctrl
     vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER, # shoot / left click
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK, # walk / Lctrl
     vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER, # aim / right click
     vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB, #  jump / space 
     vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB, # use / E
     vg.XUSB_BUTTON.XUSB_GAMEPAD_A, # skill 1 / R
     vg.XUSB_BUTTON.XUSB_GAMEPAD_B, # skill 2 / A
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_X, # ult / X
-    vg.XUSB_BUTTON.XUSB_GAMEPAD_Y] # skill 3 / F
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_Y, # skill 3 / F
+    vg.XUSB_BUTTON.XUSB_GAMEPAD_X] # ult / X
+     
 
   while True:
     data = arduino.readline()
     try:                                                                                             
       dataDecoded = data.decode('utf-8').split()
-      for i in range(2):
+      for i in range(14):
         arduinomsg[i] = int(dataDecoded[i])
+        #print(arduinomsg)
         if (arduinomsg[i] == 0 and arduinosave[i] != 0):  
           gamepad.press_button(button = buttonList[i])                          
         if (arduinomsg[i] == 1 and arduinosave[i] != 1):
@@ -86,7 +96,7 @@ def arduinoMove():
       pass
 
 def arucoRead():
-  global arucomsg
+  global arucomsg,angle
   filteredData = [0.]*3
   count = 0
   #--- Define Tag
@@ -126,7 +136,7 @@ def arucoRead():
           roll_camera, pitch_camera, yaw_camera = rotationMatrixToEulerAngles(R_flip*R_tc) 
           angle = [math.degrees(yaw_camera), math.degrees(roll_camera),math.degrees(pitch_camera)]
           pos_camera = -R_tc*np.matrix(tvec).T   
-          filteredData = expFilter(angle,filteredData)
+          filteredData = expFilter(tvec,filteredData)
           arucomsg = filteredData
           #.append(ardata)
           count = 0
@@ -141,10 +151,11 @@ def arucoRead():
           break
 
 def joystickMove():
-  global arucomsg
+  global arduinomsg,arucomsg,angle
   while True:
-    gamepad.left_joystick(x_value = 0, y_value = int(arucomsg[0]*32768/180))
-    gamepad.right_joystick(x_value = int(-arucomsg[2]*32768/45), y_value = int(arucomsg[1]*32768/45))
+    gamepad.left_joystick(x_value = 0, y_value = int(angle[0]*32768/180))
+    gamepad.right_joystick(x_value = int(-arucomsg[0]*32768/15), y_value = int(-arucomsg[1]*32768/15))
+    print(arucomsg,arduinomsg)
     gamepad.update()
                                                                                                         
 class thread_with_trace(Thread):
