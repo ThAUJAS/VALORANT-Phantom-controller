@@ -13,6 +13,7 @@ arduinomsg = [0]*14
 arduinosave = [0]*14
 arucomsg = [0]*3
 angle = [0]*3
+yaw_camera = 0
 
 def maxi(val):
   if abs(val)<2:
@@ -96,7 +97,7 @@ def arduinoMove():
       pass
 
 def arucoRead():
-  global arucomsg,angle
+  global arucomsg, yaw_camera
   filteredData = [0.]*3
   count = 0
   #--- Define Tag
@@ -104,7 +105,7 @@ def arucoRead():
   marker_size  = 5 #- [cm]
 
   #--- Get the camera calibration path
-  calib_path  = "C:/Projets/valorant_irl"
+  calib_path  = "C:/Projets/valorant_irl/valorant_irl_code/Python scripts"
   camera_matrix   = np.loadtxt(calib_path+'/cameraMatrix.txt', delimiter=',')
   camera_distortion   = np.loadtxt(calib_path+'/cameraDistortion.txt', delimiter=',')
 
@@ -127,18 +128,14 @@ def arucoRead():
       
       if ids is not None and ids[0] == id_to_find:
           ret = aruco.estimatePoseSingleMarkers(corners, marker_size, camera_matrix, camera_distortion)
-          rvec, tvec = ret[0][0,0,:], ret[1][0,0,:]
+          rvec, arucomsg = ret[0][0,0,:], ret[1][0,0,:]
           R_ct    = np.matrix(cv2.Rodrigues(rvec)[0])
           R_tc    = R_ct.T
           #-- Draw the detected marker and put a reference frame over it
           aruco.drawDetectedMarkers(frame, corners)
-          aruco.drawAxis(frame, camera_matrix, camera_distortion, rvec, tvec, 10)
-          roll_camera, pitch_camera, yaw_camera = rotationMatrixToEulerAngles(R_flip*R_tc) 
-          angle = [math.degrees(yaw_camera), math.degrees(roll_camera),math.degrees(pitch_camera)]
-          pos_camera = -R_tc*np.matrix(tvec).T   
-          filteredData = expFilter(tvec,filteredData)
-          arucomsg = filteredData
-          #.append(ardata)
+          aruco.drawAxis(frame, camera_matrix, camera_distortion, rvec, arucomsg, 10)
+          r, p, yaw_camera = rotationMatrixToEulerAngles(R_flip*R_tc) 
+          #filteredData = expFilter(tvec,filteredData)
           count = 0
           
       elif (count>10):
@@ -151,9 +148,9 @@ def arucoRead():
           break
 
 def joystickMove():
-  global arduinomsg,arucomsg,angle
+  global arduinomsg,arucomsg,yaw_camera
   while True:
-    gamepad.left_joystick(x_value = 0, y_value = int(angle[0]*32768/180))
+    gamepad.left_joystick(x_value = 0, y_value = int(math.degrees(yaw_camera)*32768/180))
     gamepad.right_joystick(x_value = int(-arucomsg[0]*32768/15), y_value = int(-arucomsg[1]*32768/15))
     print(arucomsg,arduinomsg)
     gamepad.update()
