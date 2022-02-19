@@ -22,19 +22,18 @@ void setup() {
   for(int j = 2; j <= 12; j++){
     pinMode(j, INPUT_PULLUP);
   }
-  pinMode(A4, INPUT_PULLUP);
-  
-  pinMode(A0, OUTPUT);
-  pinMode(A1, OUTPUT);
+  pinMode(A0, INPUT_PULLUP);
+  pinMode(A1, INPUT_PULLUP);
   pinMode(A2, OUTPUT);
-  pinMode(A3, INPUT);
+  pinMode(A6, INPUT);
+  pinMode(A3, OUTPUT);
   Serial.begin(9600);
 }
 
 //-------------------------------------Loop------------------------------------------//
 void loop() {
-  anval = analogRead(A3);
-  dival = digitalRead(A4);
+  anval = analogRead(A6);
+  dival = digitalRead(A0);
   //depending on the potentiometer value, when the button is pressed, only one skill will be activitated
   if(dival == 0){
     if(anval>=113 && anval<= 200 && skill_2 != 0 && ult != 0 && skill_3 != 0){
@@ -52,19 +51,19 @@ void loop() {
   //LED coloring as function of the skill
   if(anval>=113 && anval<= 200){LedColor(sky);}
   else if(anval>200 && anval<=500){LedColor(purple);}
-  else if(anval>500 && anval<=800){LedColor(blue);}
-  else if(anval>800 && anval<=900){LedColor(red);}
+  else if(anval>500 && anval<=800){LedColor(red);}
+  else if(anval>800 && anval<=900){LedColor(blue);}
 
   //sending the data by serial comm that will be taken by the python code
-  for(int i = 2; i < 12; i++){
+  for(int i = 2; i < 11; i++){
     Serial.print(digitalRead(i)); Serial.print(" ");
   }  
-    Serial.print(skill_1); Serial.print(" ");Serial.print(skill_2); Serial.print(" ");Serial.print(skill_3); Serial.print(" ");Serial.println(ult);
+    Serial.print(analogRead(A6)); Serial.print(" ");Serial.print(digitalRead(A1)); Serial.print(" ");Serial.print(skill_1); Serial.print(" ");Serial.print(skill_2); Serial.print(" ");Serial.print(skill_3); Serial.print(" ");Serial.println(ult);
 }
 
 //function that changes the color of the LED according to the RGB input
 void LedColor(int colors[]){
-  analogWrite(A0, colors[0]);
-  analogWrite(A1, colors[1]);
-  analogWrite(A2, colors[2]);
+  analogWrite(A2, colors[0]);
+  analogWrite(A6, colors[1]);
+  analogWrite(A3, colors[2]);
 }
