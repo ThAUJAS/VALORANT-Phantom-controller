@@ -25,11 +25,12 @@ Make sure to install Arduino and Python3. (but I guess that if you're ready to d
         ```
     - Then install the latest release of the driver [VigemBus](https://github.com/ViGEm/ViGEmBus/releases) (**ViGEmBusSetup_x64.msi**)
 - Install REWASD and buy the license if required and import my configuration (but you can also create your own)
-- Finally, launch the python code (**point to your screen and put your phantom straight for calibration**) and make sure that an Xbox controller appears in REWASD, you can then choose the configuration. Apply and you are ready to play.
+- Finally, launch the python code (**point to your screen and put your phantom straight for calibration and wait 2 seconds**) and make sure that an Xbox controller appears in REWASD, you can then choose the configuration. Apply and you are ready to play.
 
 The configuration, the button mapping, and the wiring are obviously up to you, if you want to change them, you can, very easily.
 
+To stop the code you just close the Python code, if you're using Visual Studio Code or somthing similar, you will need to close the terminal (I didn't found a way to stop the thread...).
  ### Hardware-wise
 - The wiring is shown in the picture below:
-  You might need to solder, a lot actually... but these are the button, easy peasy.
+  You might need to solder, a lot actually... but these are just buttons, easy peasy.
 - Print all the parts in the folder STL, some parts can be glued together such as the silencer, the buttons holders, or the stock.
